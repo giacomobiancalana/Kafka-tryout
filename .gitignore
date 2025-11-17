@@ -1,0 +1,4 @@
+.DS
+node_modules
+dist
+data
