@@ -1,15 +1,13 @@
-version: "3.8"
-
 services:
-  kafka:
+  kafka_lone_service:
     image: apache/kafka:4.1.1
-    container_name: kafka
+    container_name: kafka_lone
     ports:
       - "9092:9092"
     environment:
       # Listener interni (controller + dentro Docker) e verso l'host
       KAFKA_LISTENERS: "CONTROLLER://:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093"
-      KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:9092,DOCKER://kafka:9093"
+      KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:9092,DOCKER://kafka_lone:9093"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT"
 
       # Config necessaria per KRaft (Kafka senza ZooKeeper)
@@ -26,15 +24,15 @@ services:
 
   kafka-ui:
     image: kafbat/kafka-ui:main
-    container_name: kafka-ui
+    container_name: kafka_lone_-ui
     depends_on:
-      - kafka
+      - kafka_lone
     ports:
       - "8080:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
       KAFKA_CLUSTERS_0_NAME: "local"
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:9093"
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka_lone:9093"
     networks:
       - kafka-net
 
