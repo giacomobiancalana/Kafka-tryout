@@ -1,6 +1,22 @@
+x-kafka-common-main: &kafka-common-main
+  image: apache/kafka:4.1.1
+  restart: unless-stopped
+
+x-kafka-common-environment: &kafka-common-environment
+  KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:9091,2@kafka-2:9091,3@kafka-3:9091'
+  KAFKA_PROCESS_ROLES: "broker,controller"
+  KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+  KAFKA_LISTENERS: "CONTROLLER://:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093"
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT"
+  KAFKA_INTER_BROKER_LISTENER_NAME: "DOCKER"
+  # Singolo nodo
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+
 services:
   kafka-1:
-    image: apache/kafka:4.1.1
+    <<: *kafka-common-main
     container_name: kafka_1
     ports:
       - "${KAFKA_1_PORT}:9092"
@@ -8,20 +24,11 @@ services:
       # Config necessaria per KRaft (Kafka senza ZooKeeper)
       CLUSTER_ID: ${KAFKA_CLUSTER_ID}
       KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: "broker,controller"
-      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:9091,2@kafka-2:9091,3@kafka-3:9091'  # KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9091"
 
       # Listener interni (controller + dentro Docker) e verso l'host
-      KAFKA_LISTENERS: "CONTROLLER://:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093"
       KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:${KAFKA_1_PORT},DOCKER://kafka-1:9093"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT"
+      <<: *kafka-common-environment
 
-      # Singolo nodo
-      KAFKA_INTER_BROKER_LISTENER_NAME: "DOCKER"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
     networks:
       - kafka-net
 
@@ -34,20 +41,11 @@ services:
       # Config necessaria per KRaft (Kafka senza ZooKeeper)
       CLUSTER_ID: ${KAFKA_CLUSTER_ID}
       KAFKA_NODE_ID: 2
-      KAFKA_PROCESS_ROLES: "broker,controller"
-      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:9091,2@kafka-2:9091,3@kafka-3:9091'
 
       # Listener interni (controller + dentro Docker) e verso l'host
-      KAFKA_LISTENERS: "CONTROLLER://:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093"
       KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:${KAFKA_2_PORT},DOCKER://kafka-2:9093"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT"
+      <<: *kafka-common-environment
 
-      # Singolo nodo
-      KAFKA_INTER_BROKER_LISTENER_NAME: "DOCKER"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
     networks:
       - kafka-net
 
@@ -60,20 +58,11 @@ services:
       # Config necessaria per KRaft (Kafka senza ZooKeeper)
       CLUSTER_ID: ${KAFKA_CLUSTER_ID}
       KAFKA_NODE_ID: 3
-      KAFKA_PROCESS_ROLES: "broker,controller"
-      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:9091,2@kafka-2:9091,3@kafka-3:9091'
 
       # Listener interni (controller + dentro Docker) e verso l'host
-      KAFKA_LISTENERS: "CONTROLLER://:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093"
       KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:${KAFKA_3_PORT},DOCKER://kafka-3:9093"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT"
+      <<: *kafka-common-environment
 
-      # Singolo nodo
-      KAFKA_INTER_BROKER_LISTENER_NAME: "DOCKER"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
     networks:
       - kafka-net
 
@@ -88,8 +77,7 @@ services:
       - "8080:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
-      KAFKA_CLUSTERS_0_NAME: "local-3-node"  # "local"
-      # KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:9093"
+      KAFKA_CLUSTERS_0_NAME: "local-3-node"
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka-1:9093,kafka-2:9093,kafka-3:9093"
     networks:
       - kafka-net
