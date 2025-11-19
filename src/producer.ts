@@ -10,6 +10,8 @@ async function run() {
 
     // prendo il messaggio dalla CLI, altrimenti uso un default
     const message = process.argv[2] ?? "Messaggio di default dal producer TS";
+    // TODO: come serializzare/deserializzare i messaggi
+    // const message = JSON.stringify({campo1: "aaa"});
 
     console.log("[producer] Invio messaggio:", message);
 
