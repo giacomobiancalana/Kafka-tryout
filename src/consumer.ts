@@ -1,8 +1,10 @@
-import { kafka, topicName } from "./kafka";
+import { kafka, prepareTopics } from "./kafka";
 
 async function run() {
   const groupId = process.env.GROUP_ID ?? "default-consumer-group";
   const consumer = kafka.consumer({ groupId });
+  const topicName = `${process.env.DEFAULT_TOPIC}`;
+  await prepareTopics(topicName);
 
   try {
     await consumer.connect();
@@ -25,4 +27,5 @@ async function run() {
   }
 }
 
-run()
+// CALLING MAIN FUNCTION
+run();

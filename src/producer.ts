@@ -1,7 +1,9 @@
-import { kafka, topicName } from "./kafka";
+import { kafka, prepareTopics } from "./kafka";
 
 async function run() {
   const producer = kafka.producer();
+  const topicName = `${process.env.DEFAULT_TOPIC}`;
+  await prepareTopics(topicName);
 
   try {
     await producer.connect();
