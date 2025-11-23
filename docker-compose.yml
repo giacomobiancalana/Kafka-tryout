@@ -68,7 +68,7 @@ services:
 
   kafka-ui:
     image: kafbat/kafka-ui:main
-    container_name: kafka-ui
+    container_name: kafka_ui
     depends_on:
       - kafka-1
       - kafka-2

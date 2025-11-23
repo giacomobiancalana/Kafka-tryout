@@ -1,4 +1,13 @@
+import { serializzatore } from "./jsonSerde";
 import { kafka, prepareTopics } from "./kafka";
+import { UserAction, UserEvent } from "./types";
+
+function getActionFromArg(arg?: string): UserAction {
+  const allowed: UserAction[] = ["LOGIN", "LOGOUT", "SIGNUP"];
+  if (!arg) return "LOGIN";
+  const upper = arg.toUpperCase();
+  return (allowed.includes(upper as UserAction) ? upper : "LOGIN") as UserAction;
+}
 
 async function run() {
   const producer = kafka.producer();
@@ -8,26 +17,34 @@ async function run() {
   try {
     await producer.connect();
 
-    // prendo il messaggio dalla CLI, altrimenti uso un default
-    const message = process.argv[2] ?? "Messaggio di default dal producer TS";
-    // TODO: come serializzare/deserializzare i messaggi
-    // const message = JSON.stringify({campo1: "aaa"});
+    const userId = process.argv[2] ?? "user-123";
+    const action = getActionFromArg(process.argv[3]);
 
-    console.log("[producer] Invio messaggio:", message);
+    const event: UserEvent = {
+      userId,
+      action,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        source: "cli",
+        note: "esempio Kafka TypeScript",
+      },
+    };
+
+    console.log("[producer] Invio evento JSON:", event);
 
     await producer.send({
       topic: topicName,
       messages: [
         {
-          key: "key1",
-          value: message,
+          key: event.userId,
+          value: serializzatore<UserEvent>(event),
         },
       ],
     });
 
     console.log("[producer] Messaggio inviato!");
   } catch (err) {
-    console.error("[producer] Errore:", err);
+    console.error("[producer] Errore:\n", err);
   } finally {
     await producer.disconnect();
   }
