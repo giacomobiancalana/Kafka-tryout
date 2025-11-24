@@ -9,20 +9,23 @@ async function run() {
 
   try {
     await consumer.connect();
+  } catch (error) {
+    console.error("Non è stato possibile connettere il consumer")
+  }
 
+  // Chiusura migliore, poi il restart sarà più veloce (scelta del group coordinator)
+  process.on("SIGINT", async () => {
+    console.log("SIGINT ⇒ stop consumer");
+    await consumer.stop();
+    await consumer.disconnect();
+    process.exit(0);
+  });
+
+  try {
     const consumerDescription = await consumer.describeGroup()
     console.log("describe group del consumer:\n", consumerDescription);
 
-    // Chiusura migliore, poi il restart sarà più veloce (scelta del group coordinator)
-    process.on("SIGINT", async () => {
-      console.log("SIGINT ⇒ stop consumer");
-      await consumer.stop();
-      await consumer.disconnect();
-      process.exit(0);
-    });
-
     await consumer.subscribe({ topic: topicName, fromBeginning: true });
-
     console.log(`[consumer ${groupId}] In ascolto sul topic: ${topicName}`);
 
     await consumer.run({

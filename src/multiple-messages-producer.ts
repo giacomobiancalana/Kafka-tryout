@@ -21,7 +21,7 @@ async function run() {
 
   try {
 
-    while (true) {
+    for (let i = 0; i < 1000; i++) {
       const randomnum = Math.random() * 100;
       const action: UserAction = randomnum <= 33 ? 'LOGIN' : randomnum < 67 ? 'LOGOUT' : 'SIGNUP';
       const userId = `user-${Math.trunc(Math.random()*1000)}`;
