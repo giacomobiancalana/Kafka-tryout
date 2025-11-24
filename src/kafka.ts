@@ -20,10 +20,10 @@ export async function prepareTopics(topicName: string) {
   }
 
   try {
-    const topicsList = await kafka.admin().listTopics();
+    const topicsList = await admin.listTopics();
     console.log("ecco i topics:", topicsList);
     if (!topicsList.includes(topicName)) {
-      await kafka.admin().createTopics({
+      await admin.createTopics({
         topics: [
           {
             topic: topicName,
@@ -37,6 +37,14 @@ export async function prepareTopics(topicName: string) {
       console.log(`Topic "${topicName}" esiste già.`);
     }
   } finally {
-    admin.disconnect();
+    await admin.disconnect();
   }
+}
+
+export async function sleep(milliSecs: number): Promise<void> {
+  return new Promise((res, rej) => {
+    setTimeout(() => {
+      res();
+    }, milliSecs);
+  })
 }

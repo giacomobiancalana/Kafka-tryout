@@ -3,6 +3,7 @@ export type UserAction = "LOGIN" | "LOGOUT" | "SIGNUP";
 export interface UserEvent {
   userId: string;
   action: UserAction;
+  messaggio?: string;
   timestamp: string; // ISO string (es. new Date().toISOString())
   metadata?: Record<string, unknown>;
 }

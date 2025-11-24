@@ -16,7 +16,17 @@ async function run() {
 
   try {
     await producer.connect();
+  } catch (error) {
+    console.error("Non è stato possibile creare/connettere il producer");
+  }
 
+  process.on("SIGINT", async () => {
+    console.log("SIGINT ⇒ stop producer");
+    await producer.disconnect();
+    process.exit(0);
+  });
+
+  try {
     const userId = process.argv[2] ?? "user-123";
     const action = getActionFromArg(process.argv[3]);
 

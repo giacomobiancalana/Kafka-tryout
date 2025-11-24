@@ -1,3 +1,4 @@
+import { deserializzatore } from "./jsonSerde";
 import { kafka, prepareTopics } from "./kafka";
 
 async function run() {
@@ -8,6 +9,18 @@ async function run() {
 
   try {
     await consumer.connect();
+
+    const consumerDescription = await consumer.describeGroup()
+    console.log("describe group del consumer:\n", consumerDescription);
+
+    // Chiusura migliore, poi il restart sarà più veloce (scelta del group coordinator)
+    process.on("SIGINT", async () => {
+      console.log("SIGINT ⇒ stop consumer");
+      await consumer.stop();
+      await consumer.disconnect();
+      process.exit(0);
+    });
+
     await consumer.subscribe({ topic: topicName, fromBeginning: true });
 
     console.log(`[consumer ${groupId}] In ascolto sul topic: ${topicName}`);
@@ -16,9 +29,10 @@ async function run() {
       eachMessage: async ({ topic, partition, message }) => {
         const key = message.key?.toString();
         const value = message.value?.toString();
+        const valueDeser = deserializzatore(value);
         const offset = message.offset;
 
-        console.log(`[consumer] ${topic} [${partition}] offset ${offset} key=${key} value=${value}`);
+        console.log(`[Consumer] topic: ${topic} partition: [${partition}] offset: ${offset} key: ${key}\n value:`, valueDeser);
       },
     });
   } catch (err) {

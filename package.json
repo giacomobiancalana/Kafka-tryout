@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "producer": "ts-node src/producer.ts",
+    "mult-prod": "ts-node src/multiple-messages-producer.ts",
     "consumer": "ts-node src/consumer.ts"
   },
   "keywords": [],
