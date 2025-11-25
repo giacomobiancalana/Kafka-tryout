@@ -13,12 +13,20 @@ async function run() {
     console.error("Non è stato possibile connettere il consumer")
   }
 
-  // Chiusura migliore, poi il restart sarà più veloce (scelta del group coordinator)
-  process.on("SIGINT", async () => {
-    console.log("SIGINT ⇒ stop consumer");
-    await consumer.stop();
-    await consumer.disconnect();
-    process.exit(0);
+  // Chiusura migliore, poi il restart sarà più veloce (scelta del group coordinator più veloce)
+  const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+  signals.forEach((signal) => {
+    process.on(signal, async () => {
+      try {
+        console.log(`Ricevuto ${signal}, stoppo e disconnetto il consumer...`);
+        await consumer.stop();
+        await consumer.disconnect();
+        process.exit(0);
+      } catch (error) {
+        console.error(`Errore durante shutdown del consumer:\n${error}`);
+        process.exit(1);
+      }
+    });
   });
 
   try {
@@ -45,4 +53,9 @@ async function run() {
 }
 
 // CALLING MAIN FUNCTION
-run();
+try {
+  run();
+} catch (error) {
+  console.error('Errore nella main function del consumer:\n', error);
+  process.exit(1);
+}

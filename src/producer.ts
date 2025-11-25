@@ -20,10 +20,18 @@ async function run() {
     console.error("Non è stato possibile creare/connettere il producer");
   }
 
-  process.on("SIGINT", async () => {
-    console.log("SIGINT ⇒ stop producer");
-    await producer.disconnect();
-    process.exit(0);
+  const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+  signals.forEach((signal) => {
+    process.on(signal, async () => {
+      try {
+        console.log(`Ricevuto ${signal}, stoppo e disconnetto il producer...`);
+        await producer.disconnect();
+        process.exit(0);
+      } catch (error) {
+        console.error(`Errore durante shutdown del producer:\n${error}`);
+        process.exit(1);
+      }
+    });
   });
 
   try {
@@ -60,4 +68,10 @@ async function run() {
   }
 }
 
-run();
+// MAIN FUNCTION
+try {
+  run();
+} catch (error) {
+  console.error('Errore nella main function del producer:\n', error);
+  process.exit(1);  
+}
