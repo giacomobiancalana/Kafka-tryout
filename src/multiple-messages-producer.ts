@@ -1,11 +1,11 @@
 import { serializzatore } from "./jsonSerde";
-import { kafka, prepareTopics, sleep } from "./kafka";
+import { kafka, createTopicIfNotExists, sleep } from "./kafka";
 import { UserAction, UserEvent } from "./types";
 
 async function run() {
   const producer = kafka.producer();
   const topicName = `${process.env.DEFAULT_TOPIC}`;
-  await prepareTopics(topicName);
+  await createTopicIfNotExists(topicName);
 
   try {
     await producer.connect();
@@ -17,7 +17,7 @@ async function run() {
   signals.forEach((signal) => {
     process.on(signal, async () => {
       try {
-        console.log(`Ricevuto ${signal}, stoppo e disconnetto il multiple messages producer...`);
+        console.log(`\n### Ricevuto ${signal}, stoppo e disconnetto il multiple messages producer... ###`);
         await producer.disconnect();
         process.exit(0);
       } catch (error) {

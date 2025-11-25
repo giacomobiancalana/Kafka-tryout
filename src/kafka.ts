@@ -11,17 +11,18 @@ export const kafka = new Kafka({
 
 export const topicName = process.env.DEFAULT_TOPIC;
 
-export async function prepareTopics(topicName: string) {
+export async function createTopicIfNotExists(topicName: string) {
   const admin = kafka.admin();
   try {
     await admin.connect();
   } catch (error) {
-    console.error(`Non è possibile effettuare admin.connect(). Errore:\n${error}`);
+    console.error('Non è stato possibile connettere un admin');
+    throw error;
   }
 
   try {
     const topicsList = await admin.listTopics();
-    console.log("ecco i topics:", topicsList);
+    console.log("Ecco i topics:", topicsList);
     if (!topicsList.includes(topicName)) {
       await admin.createTopics({
         topics: [
@@ -36,6 +37,9 @@ export async function prepareTopics(topicName: string) {
     } else {
       console.log(`Topic "${topicName}" esiste già.`);
     }
+  } catch(error) {
+    console.error(`Non è stato possibile listare i topic già esistenti o creare il topic "${topicName}"`);
+    throw error;
   } finally {
     await admin.disconnect();
   }
