@@ -14,6 +14,9 @@ x-kafka-common-environment: &kafka-common-environment
   KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
   KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
   KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  KAFKA_LOG_RETENTION_HOURS: 720
+  # Default di partizioni per i topic (es. 6)
+  # KAFKA_NUM_PARTITIONS: 6
 
 services:
   kafka-1:
