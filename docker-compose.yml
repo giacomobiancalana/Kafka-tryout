@@ -29,7 +29,8 @@ services:
       # Listener interni (controller + dentro Docker) e verso l'host
       KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:${KAFKA_1_PORT},DOCKER://kafka-1:9093"
       <<: *kafka-common-environment
-
+    volumes:
+      - ./data/kafka-1:/tmp/kafka-logs
     networks:
       - kafka-net
 
@@ -46,7 +47,8 @@ services:
       # Listener interni (controller + dentro Docker) e verso l'host
       KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:${KAFKA_2_PORT},DOCKER://kafka-2:9093"
       <<: *kafka-common-environment
-
+    volumes:
+      - ./data/kafka-2:/tmp/kafka-logs
     networks:
       - kafka-net
 
@@ -63,7 +65,8 @@ services:
       # Listener interni (controller + dentro Docker) e verso l'host
       KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:${KAFKA_3_PORT},DOCKER://kafka-3:9093"
       <<: *kafka-common-environment
-
+    volumes:
+      - ./data/kafka-3:/tmp/kafka-logs
     networks:
       - kafka-net
 
