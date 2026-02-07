@@ -2,12 +2,7 @@ import { Consumer } from "kafkajs";
 import { deserializzatore } from "./jsonSerde";
 import { kafka, createTopicIfNotExists } from "./kafka";
 
-// Creo il consumer kafka
-const groupId = process.env.GROUP_ID ?? "default-consumer-group";
-const consumer = kafka.consumer({ groupId });
-const topicName = `${process.env.DEFAULT_TOPIC}`;
-
-async function run(consumer: Consumer, topicName: string) {
+async function run(consumer: Consumer, groupId: string, topicName: string) {
   try {
     const consumerDescription = await consumer.describeGroup();
     console.log("describe group del consumer:\n", consumerDescription);
@@ -31,25 +26,40 @@ async function run(consumer: Consumer, topicName: string) {
   }
 }
 
-// Chiusura migliore, poi il restart sarà più veloce (scelta del group coordinator più veloce)
-const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
-signals.forEach((signal) => {
-  process.on(signal, async () => {
-    try {
-      console.log(`\n### Ricevuto ${signal}, stoppo e disconnetto il consumer... ###`);
-      await consumer.stop();
-      await consumer.disconnect();
-      process.exit(0);
-    } catch (error) {
-      console.error(`Errore durante shutdown del consumer:\n${error}`);
-      process.exit(1);
-    }
-  });
-});
+/** Funzione/Handler per la gestione delle interruzioni */
+async function handlerInterruption(signal: NodeJS.Signals, shuttingDown: boolean, consumer: Consumer) {
+  if (shuttingDown) {
+    return null;
+  }
+  shuttingDown = true;
+  try {
+    console.log(`\n### Ricevuto ${signal}, stoppo e disconnetto il consumer... ###`);
+    await consumer.stop();
+    await consumer.disconnect();
+    process.exit(0);
+  } catch (error) {
+    console.error(`Errore durante shutdown del consumer:\n${error}`);
+    process.exit(1);
+  }
+}
 
-// CALLING MAIN FUNCTION
+function wrapperHandlersInterruptions(consumer: Consumer) {
+  const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
+  let shuttingDown = false;
+  signals.forEach((signal) => {
+    process.on(signal, () => handlerInterruption(signal, shuttingDown, consumer));
+  });
+}
+
+// MAIN FUNCTION
 async function main() {
-  // Il topic DEVE essere creato o esistere già
+
+  // 1) Creo il consumer kafka
+  const groupId = process.env.GROUP_ID ?? "default-consumer-group";
+  const consumer = kafka.consumer({ groupId });
+  const topicName = `${process.env.DEFAULT_TOPIC}`;
+
+  // 2) Il topic DEVE essere creato o esistere già
   try {
     await createTopicIfNotExists(topicName);
   } catch (error) {
@@ -57,21 +67,25 @@ async function main() {
     process.exit(1);
   }
 
-  // Il consumer DEVE essere connesso
+  // 3) Il consumer DEVE essere connesso
   try {
     await consumer.connect();
   } catch (error) {
     console.error(`Non è stato possibile connettere il consumer. Errore:\n${error}`);
     process.exit(1);
   }
+
+  // 4) Gestione interruzioni: chiusura migliore, poi il restart sarà più veloce (scelta del group coordinator sarà più veloce)
+  wrapperHandlersInterruptions(consumer);
   
-  // Ora posso eseguire la funzione principale
+  // 5) Ora posso eseguire la funzione principale
   try {
-    run(consumer, topicName);
+    run(consumer, groupId, topicName);
   } catch (error) {
     console.error(`Errore nella main function del consumer:\n${error}`);
     process.exit(1);
   }
+
 }
 
 main();

@@ -2,6 +2,8 @@ import { serializzatore } from "./jsonSerde";
 import { kafka, createTopicIfNotExists } from "./kafka";
 import { UserAction, UserEvent } from "./types";
 
+// TODO: vuoi impostare questo codice come sul consumer e il multiple-messages-producer?
+
 function getActionFromArg(arg?: string): UserAction {
   const allowed: UserAction[] = ["LOGIN", "LOGOUT", "SIGNUP"];
   if (!arg) return "LOGIN";
