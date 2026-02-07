@@ -1,6 +1,7 @@
 import { Consumer } from "kafkajs";
 import { deserializzatore } from "./jsonSerde";
 import { kafka, createTopicIfNotExists } from "./kafka";
+import { tryCatchino } from "./utils/error.helper";
 
 async function run(consumer: Consumer, groupId: string, topicName: string) {
   try {
@@ -60,9 +61,8 @@ async function main() {
   const topicName = `${process.env.DEFAULT_TOPIC}`;
 
   // 2) Il topic DEVE essere creato o esistere già
-  try {
-    await createTopicIfNotExists(topicName);
-  } catch (error) {
+  const { data, error } = await tryCatchino(createTopicIfNotExists(topicName));
+  if (error) {
     console.error(error);
     process.exit(1);
   }
