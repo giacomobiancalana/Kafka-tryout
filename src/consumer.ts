@@ -61,17 +61,16 @@ async function main() {
   const topicName = `${process.env.DEFAULT_TOPIC}`;
 
   // 2) Il topic DEVE essere creato o esistere già
-  const { data, error } = await tryCatchino(createTopicIfNotExists(topicName));
-  if (error) {
-    console.error(error);
+  const { error: errorCreateTopics } = await tryCatchino(createTopicIfNotExists(topicName));
+  if (errorCreateTopics) {
+    console.error(errorCreateTopics);
     process.exit(1);
   }
 
   // 3) Il consumer DEVE essere connesso
-  try {
-    await consumer.connect();
-  } catch (error) {
-    console.error(`Non è stato possibile connettere il consumer. Errore:\n${error}`);
+  const { error: errorConsumerConnect } = await tryCatchino(consumer.connect());
+  if (errorConsumerConnect) {
+    console.error(`Non è stato possibile connettere il consumer. Errore:\n${errorConsumerConnect}`);
     process.exit(1);
   }
 
